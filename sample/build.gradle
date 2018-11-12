@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.baidu.tts.sample"
-        minSdkVersion 14
+        minSdkVersion 23
         targetSdkVersion 27
     }
 
