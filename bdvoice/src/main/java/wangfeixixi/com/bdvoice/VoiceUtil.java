@@ -19,11 +19,23 @@ import java.util.List;
 
 
 public class VoiceUtil {
-    private static SpeechSynthesizer mSpeechSynthesizer;
+    private VoiceUtil() {
+
+    }
+
+    private static class Instance {
+        private static VoiceUtil voiceUtil = new VoiceUtil();
+    }
+
+    public static VoiceUtil getInstance() {
+        return Instance.voiceUtil;
+    }
+
+    private SpeechSynthesizer mSpeechSynthesizer;
     private static String TAG = "voiceutil";
 
 
-    public static void initKey(Context context, String appId, String appKey, String secretKey) {
+    public void initKey(Context context, String appId, String apiKey, String secretKey) {
 // 1. 获取实例
         mSpeechSynthesizer = SpeechSynthesizer.getInstance();
         mSpeechSynthesizer.setContext(context);
@@ -34,14 +46,14 @@ public class VoiceUtil {
         // 3. 设置appId，appKey.secretKey
         int result = mSpeechSynthesizer.setAppId(appId);
         Log.d(TAG, "setAppid" + result);
-        result = mSpeechSynthesizer.setApiKey(appKey, secretKey);
+        result = mSpeechSynthesizer.setApiKey(apiKey, secretKey);
         Log.d(TAG, "setApiKey" + result);
 
-        mSpeechSynthesizer.auth(TtsMode.ONLINE);  // 纯在线
-//        mSpeechSynthesizer.auth(TtsMode.MIX); // 离在线混合
+//        mSpeechSynthesizer.auth(TtsMode.ONLINE);  // 纯在线
+        mSpeechSynthesizer.auth(TtsMode.MIX); // 离在线混合
 
         mSpeechSynthesizer.setParam(SpeechSynthesizer.PARAM_SPEAKER, "0"); // 设置发声的人声音，在线生效
-        mSpeechSynthesizer.initTts(TtsMode.ONLINE); // 初始化离在线混合模式，如果只需要在线合成功能，使用 TtsMode.ONLINE
+        mSpeechSynthesizer.initTts(TtsMode.MIX); // 初始化离在线混合模式，如果只需要在线合成功能，使用 TtsMode.ONLINE
 
 //        try {
 //            mSpeechSynthesizer.loadModel(copyAssetsFile("bd_etts_speech_female.dat"), copyAssetsFile("bd_etts_text.dat"));
@@ -51,14 +63,15 @@ public class VoiceUtil {
         mSpeechSynthesizer.setStereoVolume(1.0f, 1.0f);
     }
 
-    public static void close() {
+    public void close() {
         int result = mSpeechSynthesizer.release();
     }
 
-    public static void speek(String s) {
+    public void speek(String s) {
         Log.d(TAG, "语音播放：" + s);
         mSpeechSynthesizer.speak(s);
     }
+
 
     public int batchSpeak(List<Pair<String, String>> texts) {
         List<SpeechSynthesizeBag> bags = new ArrayList<SpeechSynthesizeBag>();
@@ -74,7 +87,7 @@ public class VoiceUtil {
         return mSpeechSynthesizer.batchSpeak(bags);
     }
 
-    private static String copyAssetsFile(Context context, String sourceFilename) throws IOException {
+    private String copyAssetsFile(Context context, String sourceFilename) throws IOException {
         String destFilename = createTmpDir(context) + "/" + sourceFilename;
         copyFromAssets(context.getAssets(), sourceFilename, destFilename, false);
         Log.i(TAG, "文件复制成功：" + destFilename);
@@ -82,7 +95,7 @@ public class VoiceUtil {
     }
 
     // 创建一个临时目录，用于复制临时文件，如assets目录下的离线资源文件
-    public static String createTmpDir(Context context) {
+    private String createTmpDir(Context context) {
         String sampleDir = "baiduTTS";
         String tmpDir = Environment.getExternalStorageDirectory().toString() + "/" + sampleDir;
         if (!makeDir(tmpDir)) {
@@ -94,7 +107,7 @@ public class VoiceUtil {
         return tmpDir;
     }
 
-    public static boolean makeDir(String dirPath) {
+    private boolean makeDir(String dirPath) {
         File file = new File(dirPath);
         if (!file.exists()) {
             return file.mkdirs();
@@ -103,7 +116,7 @@ public class VoiceUtil {
         }
     }
 
-    public static void copyFromAssets(AssetManager assets, String source, String dest, boolean isCover)
+    private void copyFromAssets(AssetManager assets, String source, String dest, boolean isCover)
             throws IOException {
         File file = new File(dest);
         if (isCover || (!isCover && !file.exists())) {
